@@ -16,8 +16,11 @@ public class MainFrame {
     private JButton _sendButton;
     private JButton _addRandomRectButton;
     private JButton _stopConnectionButton;
+    private JButton _addRandomCircleButton;
 
     private Connection _connection;
+
+    private JCheckBox _isServerBox;
 
     public void init(boolean isServer) throws IOException {
         _connection = new Connection(isServer);
@@ -35,6 +38,9 @@ public class MainFrame {
         _makeAddRandomRectButton();
         _makeSendButton();
         _makeStopConnectionButton();
+        _makeAddRandomCircleButton();
+        _makeIsServerBox();
+        _isServerBox.setSelected(isServer);
 
         _frame.add(_panel);
 
@@ -42,6 +48,8 @@ public class MainFrame {
         _buttonPanel.add(_addRandomRectButton);
         _buttonPanel.add(_sendButton);
         _buttonPanel.add(_stopConnectionButton);
+        _buttonPanel.add(_addRandomCircleButton);
+        _buttonPanel.add(_isServerBox);
 
         _frame.getContentPane().add(_buttonPanel, BorderLayout.SOUTH);
         _frame.setVisible(true);
@@ -83,8 +91,33 @@ public class MainFrame {
         });
     }
 
-    public void paintRectsFromSocket(String json) {
+    public void paintObjectsFromSocket(String json) {
         _panel.deserializeFromJson(json);
         _panel.repaint();
+    }
+
+    private void _makeAddRandomCircleButton() {
+        _addRandomCircleButton = new JButton("Add Random Circle");
+        _addRandomCircleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                _panel.addRandomCircleFunc();
+                _panel.repaint();
+            }
+        });
+    }
+
+    private void _makeIsServerBox() {
+        _isServerBox = new JCheckBox("Is Server");
+        _isServerBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                _connection.send("reserv");
+            }
+        });
+    }
+
+    public void doClickOnCheckBox() {
+        _isServerBox.setSelected(!_isServerBox.isSelected());
     }
 }

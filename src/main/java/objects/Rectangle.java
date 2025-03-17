@@ -1,17 +1,16 @@
 package objects;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class Rectangle {
-    private long x;
-    private long y;
+public class Rectangle extends GraphicObject {
     private long width;
     private long height;
+
+    public Rectangle(long x, long y, long width, long height) {
+        super("Rectangle", x, y);
+        this.width = width;
+        this.height = height;
+    }
 }

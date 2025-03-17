@@ -53,8 +53,11 @@ public class Connection {
                         if (line.equals("exit")) {
                             _listener.interrupt();
                             break;
+                        } else if (line.equals("reserv")) {
+                            frame.doClickOnCheckBox();
+                            continue;
                         }
-                        frame.paintRectsFromSocket(line);
+                        frame.paintObjectsFromSocket(line);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -70,6 +73,7 @@ public class Connection {
         }
         try {
             for (String s : json) {
+                System.out.println(s);
                 _out.writeUTF(s);
                 _out.flush();
             }
