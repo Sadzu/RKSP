@@ -1,6 +1,10 @@
 package frames;
 
-import server.Connection;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+import events.ConnectionsReceivedEvent;
+import events.ObjectReceivedEvent;
+import server.Client;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,25 +17,32 @@ public class MainFrame {
     private PaintPanel _panel;
     private JPanel _buttonPanel;
 
+    private ConnectionsListFrame connectionsListFrame;
+
     private JButton _sendButton;
     private JButton _addRandomRectButton;
     private JButton _stopConnectionButton;
     private JButton _addRandomCircleButton;
+    private JButton _showConnectionsButton;
 
-    private Connection _connection;
+    private JTextArea _sendToIdTextField;
 
-    private JCheckBox _isServerBox;
+    private Timer connectionsUpdateTimer;
 
-    public void init(boolean isServer) throws IOException {
-        _connection = new Connection(isServer);
-        _connection.connect("localhost", 6666, this);
+    private Client client;
 
-        System.out.println("Connected to server");
+    private EventBus eventBus;
 
-        _frame = new JFrame();
-        _frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    public void init() throws IOException {
+        eventBus = new EventBus();
+        eventBus.register(this);
+        client = new Client();
+        int id = client.init(eventBus);
+
+        _frame = new JFrame("Client: " + id);
+        _frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         _frame.setSize(1000, 1000);
-        _frame.setBounds(100, 100, 1000, 800);
+        _frame.setBounds(0, 0, 1000, 800);
 
         _panel = new PaintPanel();
 
@@ -39,8 +50,8 @@ public class MainFrame {
         _makeSendButton();
         _makeStopConnectionButton();
         _makeAddRandomCircleButton();
-        _makeIsServerBox();
-        _isServerBox.setSelected(isServer);
+        _makeShowConnectionsButton();
+        _makeSendToIdTextField();
 
         _frame.add(_panel);
 
@@ -49,9 +60,26 @@ public class MainFrame {
         _buttonPanel.add(_sendButton);
         _buttonPanel.add(_stopConnectionButton);
         _buttonPanel.add(_addRandomCircleButton);
-        _buttonPanel.add(_isServerBox);
+        _buttonPanel.add(_showConnectionsButton);
+        _buttonPanel.add(_sendToIdTextField);
 
         _frame.getContentPane().add(_buttonPanel, BorderLayout.SOUTH);
+
+        connectionsListFrame = new ConnectionsListFrame();
+        connectionsListFrame.init();
+        //connectionsListFrame.update(getConnectionsList());
+        connectionsUpdateTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    client.send("gimmeConnections");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        connectionsUpdateTimer.start();
+
         _frame.setVisible(true);
     }
 
@@ -71,13 +99,13 @@ public class MainFrame {
         _sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                _send();
+                try {
+                    _sendTo(Integer.parseInt(_sendToIdTextField.getText()), _panel.getObjectsCount());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
-    }
-
-    private void _send() {
-        _connection.sendJsons(_panel.serializeToJson());
     }
 
     private void _makeStopConnectionButton() {
@@ -85,13 +113,12 @@ public class MainFrame {
         _stopConnectionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                _connection.send("exit");
-                _frame.setVisible(false);
+                exit();
             }
         });
     }
 
-    public void paintObjectsFromSocket(String json) {
+    public void paintObjectFromSocket(String json) {
         _panel.deserializeFromJson(json);
         _panel.repaint();
     }
@@ -107,17 +134,51 @@ public class MainFrame {
         });
     }
 
-    private void _makeIsServerBox() {
-        _isServerBox = new JCheckBox("Is Server");
-        _isServerBox.addActionListener(new ActionListener() {
+    private void _makeShowConnectionsButton() {
+        _showConnectionsButton = new JButton("Show Connections");
+        _showConnectionsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                _connection.send("reserv");
+                connectionsListFrame.show();
             }
         });
     }
 
-    public void doClickOnCheckBox() {
-        _isServerBox.setSelected(!_isServerBox.isSelected());
+    private void _makeSendToIdTextField() {
+        _sendToIdTextField = new JTextArea();
+        _sendToIdTextField.setSize(30, 10);
+        _sendToIdTextField.setEditable(true);
+    }
+
+    private void _sendTo(int id, int count) {
+        try {
+            client.send("send " + id + " " + count);
+            for (String json : _panel.serializeToJson()) {
+                client.send(json);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Subscribe
+    public void onObjectReceived(ObjectReceivedEvent objectReceivedEvent) {
+        _panel.deserializeFromJson(objectReceivedEvent.getObject());
+        _panel.repaint();
+    }
+
+    @Subscribe
+    public void onConnectionsReceived(ConnectionsReceivedEvent connectionsReceivedEvent) {
+        connectionsListFrame.update(connectionsReceivedEvent.getConnections());
+    }
+
+    private void exit() {
+        try {
+            connectionsUpdateTimer.stop();
+            client.close();
+            _frame.setVisible(false);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }

@@ -74,4 +74,8 @@ public class PaintPanel extends JPanel {
             _graphicObjects.add(gson.fromJson(json, Rectangle.class));
         }
     }
+
+    public int getObjectsCount() {
+        return _graphicObjects.size();
+    }
 }
