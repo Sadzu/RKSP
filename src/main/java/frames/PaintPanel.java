@@ -78,4 +78,20 @@ public class PaintPanel extends JPanel {
     public int getObjectsCount() {
         return _graphicObjects.size();
     }
+
+    public ArrayList<GraphicObject> getObjects() {
+        return _graphicObjects;
+    }
+
+    public ArrayList<String> serializeSelectedToJson(SelectItemsFrame selectItemsFrame) {
+        ArrayList<JCheckBox> checkBoxes = selectItemsFrame.getItemsSelectors();
+        ArrayList<String> response = new ArrayList<>();
+        for (int i = 0; i < _graphicObjects.size(); i++) {
+            if (checkBoxes.get(i).isSelected()) {
+                response.add(gson.toJson(_graphicObjects.get(i)));
+            }
+        }
+
+        return response;
+    }
 }

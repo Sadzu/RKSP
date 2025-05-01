@@ -3,8 +3,9 @@ package frames;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import events.ConnectionsReceivedEvent;
+import events.IdReceivedEvent;
 import events.ObjectReceivedEvent;
-import server.Client;
+import server.UDPClient;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,6 +14,9 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 
 public class MainFrame {
+    private String ip;
+    private int port;
+
     private JFrame _frame;
     private PaintPanel _panel;
     private JPanel _buttonPanel;
@@ -24,22 +28,40 @@ public class MainFrame {
     private JButton _stopConnectionButton;
     private JButton _addRandomCircleButton;
     private JButton _showConnectionsButton;
+    private JButton _selectItemsToSendButton;
+    private JButton _launchNewClientButton;
 
     private JTextArea _sendToIdTextField;
 
     private Timer connectionsUpdateTimer;
 
-    private Client client;
+    private UDPClient udpClient;
 
     private EventBus eventBus;
 
-    public void init() throws IOException {
-        eventBus = new EventBus();
-        eventBus.register(this);
-        client = new Client();
-        int id = client.init(eventBus);
+    private SelectItemsFrame selectItemsFrame;
 
-        _frame = new JFrame("Client: " + id);
+    public void init(String ip, int port) throws IOException {
+        this.ip = ip;
+        this.port = port;
+
+        selectItemsFrame = new SelectItemsFrame();
+
+        connectionsListFrame = new ConnectionsListFrame();
+        connectionsListFrame.init();
+        connectionsUpdateTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    udpClient.send("gimmeConnections");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        _frame = new JFrame("Client: ");
+        _frame.setTitle("Client ID: ожидание...");
         _frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         _frame.setSize(1000, 1000);
         _frame.setBounds(0, 0, 1000, 800);
@@ -52,6 +74,8 @@ public class MainFrame {
         _makeAddRandomCircleButton();
         _makeShowConnectionsButton();
         _makeSendToIdTextField();
+        makeSelectItemsToSendButton();
+        makeLaunchNewClientButton();
 
         _frame.add(_panel);
 
@@ -62,22 +86,17 @@ public class MainFrame {
         _buttonPanel.add(_addRandomCircleButton);
         _buttonPanel.add(_showConnectionsButton);
         _buttonPanel.add(_sendToIdTextField);
+        _buttonPanel.add(_selectItemsToSendButton);
+        _buttonPanel.add(_launchNewClientButton);
 
         _frame.getContentPane().add(_buttonPanel, BorderLayout.SOUTH);
 
-        connectionsListFrame = new ConnectionsListFrame();
-        connectionsListFrame.init();
-        //connectionsListFrame.update(getConnectionsList());
-        connectionsUpdateTimer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    client.send("gimmeConnections");
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
+        eventBus = new EventBus();
+        eventBus.register(this);
+
+        udpClient = new UDPClient(ip, port, eventBus);
+        udpClient.init();
+
         connectionsUpdateTimer.start();
 
         _frame.setVisible(true);
@@ -145,16 +164,16 @@ public class MainFrame {
     }
 
     private void _makeSendToIdTextField() {
-        _sendToIdTextField = new JTextArea();
+        _sendToIdTextField = new JTextArea(1, 4);
         _sendToIdTextField.setSize(30, 10);
         _sendToIdTextField.setEditable(true);
     }
 
     private void _sendTo(int id, int count) {
         try {
-            client.send("send " + id + " " + count);
-            for (String json : _panel.serializeToJson()) {
-                client.send(json);
+            udpClient.send("send " + id + " " + count);
+            for (String json : _panel.serializeSelectedToJson(selectItemsFrame)) {
+                udpClient.send(json);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -173,12 +192,38 @@ public class MainFrame {
     }
 
     private void exit() {
-        try {
-            connectionsUpdateTimer.stop();
-            client.close();
-            _frame.setVisible(false);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        connectionsUpdateTimer.stop();
+        udpClient.close();
+        _frame.setVisible(false);
+    }
+
+    private void makeSelectItemsToSendButton() {
+        _selectItemsToSendButton = new JButton("Select Items to Send");
+        selectItemsFrame.init(_panel.getObjects());
+        _selectItemsToSendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                selectItemsFrame.show(_panel.getObjects());
+            }
+        });
+    }
+
+    private void makeLaunchNewClientButton() {
+        _launchNewClientButton = new JButton("Launch New Client");
+        _launchNewClientButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    new MainFrame().init(ip, port + 1);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+
+    @Subscribe
+    public void onIdReceived(IdReceivedEvent event) {
+        _frame.setTitle("Client ID: " + event.getId());
     }
 }

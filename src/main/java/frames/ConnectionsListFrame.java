@@ -3,13 +3,14 @@ package frames;
 import javax.swing.*;
 
 public class ConnectionsListFrame {
-    JFrame frame;
-    JTextArea textArea;
+    private JFrame frame;
+    private JTextArea textArea;
 
 
     public void init() {
-        frame = new JFrame("Connections List");
         textArea = new JTextArea();
+        frame = new JFrame("Connections List");
+
         textArea.setEditable(false);
         frame.add(textArea);
         frame.pack();
