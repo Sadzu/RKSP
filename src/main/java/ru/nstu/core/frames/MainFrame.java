@@ -52,7 +52,9 @@ public class MainFrame {
                 try {
                     String response = restClient.doGet("/receive", id);
                     if (response != null && !response.isEmpty()) {
+                        System.out.println(response);
                         _panel.deserializeFromJson(response);
+                        selectItemsFrame.update(_panel.getObjects());
                     }
                 } catch (Exception e1) {
                     e1.printStackTrace();
@@ -124,7 +126,13 @@ public class MainFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 _panel.addRandomRectFunc();
+                selectItemsFrame.update(_panel.getObjects());
                 _panel.repaint();
+                try {
+                    restClient.doPost("/put-new", id, _panel.serializeToJson());
+                } catch (Exception ex) {
+                    System.err.println(ex.getMessage());
+                }
             }
         });
     }
@@ -164,7 +172,13 @@ public class MainFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 _panel.addRandomCircleFunc();
+                selectItemsFrame.update(_panel.getObjects());
                 _panel.repaint();
+                try {
+                    restClient.doPost("/put-new", id, _panel.serializeToJson());
+                } catch (Exception ex) {
+                    System.err.println(ex.getMessage());
+                }
             }
         });
     }
@@ -201,7 +215,7 @@ public class MainFrame {
 
     private void makeSelectItemsToSendButton() {
         _selectItemsToSendButton = new JButton("Select Items to Send");
-        selectItemsFrame.init(_panel.getObjects());
+        selectItemsFrame.init();
         _selectItemsToSendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
