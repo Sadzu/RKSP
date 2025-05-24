@@ -1,7 +1,6 @@
 package ru.nstu.rksp_lab_4_server.core.service.implementation;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.nstu.rksp_lab_4_server.core.service.ObjectService;
 import ru.nstu.rksp_lab_4_server.core.util.JsonStorage;
@@ -15,8 +14,7 @@ public class ObjectServiceImpl implements ObjectService {
 
     private final ArrayList<Integer> clients = new ArrayList<>();
 
-    @Autowired
-    private JsonStorage jsonStorage;
+    private final JsonStorage jsonStorage;
 
     @Override
     public Integer register() {
@@ -45,4 +43,16 @@ public class ObjectServiceImpl implements ObjectService {
     public String receive(String clientId) {
         return jsonStorage.getById(Integer.parseInt(clientId));
     }
+
+    @Override
+    public String getAll(Integer clientId) {
+        return jsonStorage.getAll(clientId);
+    }
+
+    @Override
+    public Boolean putNew(Integer clientId, String json) {
+        jsonStorage.saveToPermanentStorage(clientId, json);
+        return true;
+    }
+
 }

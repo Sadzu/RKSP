@@ -6,4 +6,8 @@ public interface JsonStorage {
 
     void save(Integer clientId, String json);
 
+    String getAll(Integer clientId);
+
+    void saveToPermanentStorage(Integer clientId, String json);
+
 }

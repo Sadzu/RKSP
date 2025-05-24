@@ -12,4 +12,8 @@ public interface ObjectService {
 
     String receive(String clientId);
 
+    String getAll(Integer clientId);
+
+    Boolean putNew(Integer clientId, String json);
+
 }

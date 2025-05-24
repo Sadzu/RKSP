@@ -11,6 +11,7 @@ import java.util.HashMap;
 public class JsonStorageImpl implements JsonStorage {
 
     private final HashMap<Integer, String> clientsData = new HashMap<>();
+    private final HashMap<Integer, String> permanentClientData = new HashMap<>();
 
     @Override
     public String getById(Integer clientId) {
@@ -27,4 +28,16 @@ public class JsonStorageImpl implements JsonStorage {
     public void save(Integer clientId, String json) {
         clientsData.put(clientId, json);
     }
+
+    @Override
+    public void saveToPermanentStorage(Integer clientId, String json) {
+        permanentClientData.put(clientId, json);
+        System.out.println(json);
+    }
+
+    @Override
+    public String getAll(Integer clientId) {
+        return permanentClientData.get(clientId);
+    }
+
 }
