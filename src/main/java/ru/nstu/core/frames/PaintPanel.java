@@ -14,12 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PaintPanel extends JPanel {
-    private final ArrayList<GraphicObject> _graphicObjects;
+    private final ArrayList<GraphicObject> _graphicObjects = new ArrayList<>();
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-    public PaintPanel() {
-        _graphicObjects = new ArrayList<>();
-    }
 
     public static void drawRect(Rectangle rectangle, Graphics g) {
         g.setColor(Color.MAGENTA);
@@ -62,12 +58,8 @@ public class PaintPanel extends JPanel {
         _graphicObjects.add(circle);
     }
 
-    public String[] serializeToJson() {
-        String[] jsons = new String[_graphicObjects.size()];
-        for (int i = 0; i < _graphicObjects.size(); i++) {
-            jsons[i] = gson.toJson(_graphicObjects.get(i));
-        }
-        return jsons;
+    public String serializeToJson() {
+        return gson.toJson(_graphicObjects);
     }
 
     public void deserializeFromJson(String json) {

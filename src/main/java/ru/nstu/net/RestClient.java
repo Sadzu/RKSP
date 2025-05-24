@@ -1,7 +1,5 @@
 package ru.nstu.net;
 
-import com.google.common.eventbus.EventBus;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;

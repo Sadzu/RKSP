@@ -1,7 +1,6 @@
 package ru.nstu.core.frames;
 
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import ru.nstu.net.RestClient;
 
 import javax.swing.*;
@@ -26,6 +25,7 @@ public class MainFrame {
     private JButton _showConnectionsButton;
     private JButton _selectItemsToSendButton;
     private JButton _launchNewClientButton;
+    private JButton _getAllButton;
 
     private JTextArea _sendToIdTextField;
 
@@ -52,7 +52,9 @@ public class MainFrame {
                 try {
                     String response = restClient.doGet("/receive", id);
                     if (response != null && !response.isEmpty()) {
+                        System.out.println(response);
                         _panel.deserializeFromJson(response);
+                        selectItemsFrame.update(_panel.getObjects());
                     }
                 } catch (Exception e1) {
                     e1.printStackTrace();
@@ -86,6 +88,7 @@ public class MainFrame {
         _makeSendToIdTextField();
         makeSelectItemsToSendButton();
         makeLaunchNewClientButton();
+        makeGetAllButton();
 
         _frame.add(_panel);
 
@@ -98,6 +101,7 @@ public class MainFrame {
         _buttonPanel.add(_sendToIdTextField);
         _buttonPanel.add(_selectItemsToSendButton);
         _buttonPanel.add(_launchNewClientButton);
+        _buttonPanel.add(_getAllButton);
 
         _frame.getContentPane().add(_buttonPanel, BorderLayout.SOUTH);
 
@@ -124,7 +128,13 @@ public class MainFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 _panel.addRandomRectFunc();
+                selectItemsFrame.update(_panel.getObjects());
                 _panel.repaint();
+                try {
+                    restClient.doPost("/put-new", id, _panel.serializeToJson());
+                } catch (Exception ex) {
+                    System.err.println(ex.getMessage());
+                }
             }
         });
     }
@@ -164,7 +174,13 @@ public class MainFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 _panel.addRandomCircleFunc();
+                selectItemsFrame.update(_panel.getObjects());
                 _panel.repaint();
+                try {
+                    restClient.doPost("/put-new", id, _panel.serializeToJson());
+                } catch (Exception ex) {
+                    System.err.println(ex.getMessage());
+                }
             }
         });
     }
@@ -201,7 +217,7 @@ public class MainFrame {
 
     private void makeSelectItemsToSendButton() {
         _selectItemsToSendButton = new JButton("Select Items to Send");
-        selectItemsFrame.init(_panel.getObjects());
+        selectItemsFrame.init();
         _selectItemsToSendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -218,6 +234,23 @@ public class MainFrame {
                 try {
                     new MainFrame().init();
                 } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void makeGetAllButton() {
+        _getAllButton = new JButton("Get all objects of");
+        _getAllButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String result = restClient.doGet("/get-all/" + Integer.parseInt(_sendToIdTextField.getText()), id);
+                    System.out.println("Result: ");
+                    System.out.println(result);
+                    _panel.deserializeFromJson(result);
+                } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }

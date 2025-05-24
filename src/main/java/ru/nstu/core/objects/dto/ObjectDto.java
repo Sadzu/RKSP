@@ -2,6 +2,7 @@ package ru.nstu.core.objects.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import ru.nstu.core.frames.PaintPanel;
 
 @Data
 @AllArgsConstructor
