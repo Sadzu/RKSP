@@ -1,7 +1,6 @@
 package ru.nstu.core.frames;
 
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import ru.nstu.net.RestClient;
 
 import javax.swing.*;
@@ -125,7 +124,7 @@ public class MainFrame {
         _addRandomRectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                _panel.addRandomRectFunc();
+                _panel.addRandomRectFunc(id);
                 selectItemsFrame.update(_panel.getObjects());
                 _panel.repaint();
                 try {
@@ -171,7 +170,7 @@ public class MainFrame {
         _addRandomCircleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                _panel.addRandomCircleFunc();
+                _panel.addRandomCircleFunc(id);
                 selectItemsFrame.update(_panel.getObjects());
                 _panel.repaint();
                 try {
