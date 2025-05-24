@@ -15,8 +15,7 @@ public class ObjectServiceImpl implements ObjectService {
 
     private final ArrayList<Integer> clients = new ArrayList<>();
 
-    @Autowired
-    private JsonStorage jsonStorage;
+    private final JsonStorage jsonStorage;
 
     @Override
     public Integer register() {
